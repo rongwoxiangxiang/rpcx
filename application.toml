@@ -1,0 +1,27 @@
+[application]
+  name    = "chs"
+  env     = "dev"
+  version = "1.1.0.1"
+  address = "127.0.0.1:50052"
+  debug   = true
+
+[logger]
+level = "INFO"
+name = "application"
+
+#数据库驱动
+[database]
+    dirver = "mysql"
+
+[source]
+default_read  = "root:root@(127.0.0.1:3306)/wechat?charset=utf8"
+default_write = "root:root@(127.0.0.1:3306)/wechat?charset=utf8"
+app_db_read  = "root:root@(127.0.0.1:3306)/wechat?charset=utf8"
+app_db_write = "root:root@(127.0.0.1:3306)/wechat?charset=utf8"
+
+#reids
+[redis]
+  Addr = "127.0.0.1:6379"
+  Password = ""
+  DB = 0
+

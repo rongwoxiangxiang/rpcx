@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package service; 
+
+message Activity {
+    int64 Id  = 1;
+    int64 Wid = 2;
+    string Name = 3;
+    string Desc = 4;
+    int32 ActivityType = 5;
+    int64 RelativeId = 6;
+    string  Extra = 7;
+    int64 TimeStarted = 8;
+    int64 TimeEnd = 9;
+    int64 CreatedAt = 10;
+    int64 UpdatedAt = 11;
+}
+
+message ActivityResponse {
+    bool boolean = 1;
+    int64 id = 2;
+}
+
+message ActivityQuery {
+    int64 index = 1;
+    int64 TimeStarted = 2;
+    int64 TimeEnd = 3;
+    int64 ActivityType = 4;
+    int64 RelativeId = 5;
+    int64 limit = 6;
+    int64 wid   = 7;
+}
+
+message Activitylist {
+    int64 total = 1;
+    int64 pagesize = 2;
+    repeated Activity activities = 3;
+}
+
+service ActivityService {
+    rpc GetById(Activity) returns (Activity){}
+    rpc List(ActivityQuery) returns (Activitylist){}
+
+	rpc Insert(Activity) returns (Activity){}
+//	rpc Update(Activity) returns (Activity){}
+//	rpc DeleteById(Activity) returns (Response){}
+}
