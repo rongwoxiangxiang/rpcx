@@ -11,7 +11,7 @@ name = "application"
 
 #数据库驱动
 [database]
-    dirver = "mysql"
+   dirver = "mysql"
 
 [source]
 default_read  = "root:root@(127.0.0.1:3306)/wechat?charset=utf8"

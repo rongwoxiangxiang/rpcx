@@ -1,31 +1,22 @@
 package main
 
 import (
-	"google.golang.org/grpc"
-	"log"
-	"net"
-	"rpc/lib/config"
-	"rpc/lib/service"
+	"flag"
+	"github.com/smallnest/rpcx/server"
+	"rpc/service"
 )
 
-const (
-	Address = "127.0.0.1:50052"
+var (
+	addr = flag.String("addr", "localhost:8972", "server address")
 )
 
 func main() {
-	config.InitConfig()
-	config.InitStoreDb()
-	listen, err := net.Listen(
-		"tcp",
-		config.Conf.GetDefault("application.address", "127.0.0.1:50052").(string),
-	)
+	flag.Parse()
+
+	s := server.NewServer()
+	s.RegisterName("Activity", new(service.ActivitService), "")
+	err := s.Serve("tcp", *addr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		panic(err)
 	}
-	// 实例化grpc Server
-	s := grpc.NewServer()
-	service.RegisterActivityServiceServer(s, service.ActivityServiceImpl{})
-	service.RegisterCheckinServiceServer(s, service.CheckinServiceImpl{})
-	log.Println("Listen on " + Address)
-	s.Serve(listen)
 }

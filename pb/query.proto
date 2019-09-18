@@ -1,0 +1,23 @@
+syntax = "proto3";
+package pb;
+
+message requestList {
+    int64 index = 1;
+    int64 limit = 2;
+    int64 gt = 3;
+    int64 lt = 4;
+    map<string, string> params = 5;
+}
+
+message requestById {
+    int64 id = 1;
+}
+
+message requestByName {
+    string name = 1;
+}
+
+message responseEffect {
+    bool success = 1;
+    int64 effect = 2;
+}
