@@ -17,3 +17,11 @@ func StringToInt64(str string) int64 {
 	}
 	return i
 }
+
+func BoolenToInt8(bool2 bool) int8 {
+	if bool2 {
+		return 1
+	} else {
+		return 2
+	}
+}

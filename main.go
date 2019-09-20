@@ -15,6 +15,7 @@ func main() {
 
 	s := server.NewServer()
 	s.RegisterName("Activity", new(service.ActivitService), "")
+	s.RegisterName("Prize", new(service.PrizeService), "")
 	err := s.Serve("tcp", *addr)
 	if err != nil {
 		panic(err)

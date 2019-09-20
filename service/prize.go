@@ -23,7 +23,7 @@ func CopyPrizeDaoToPb(Prize *dao.PrizeModel, pbPrize *pb.Prize) *pb.Prize {
 	pbPrize.ActivityId = Prize.ActivityId
 	pbPrize.Code = Prize.Code
 	pbPrize.Level = Prize.Level
-	pbPrize.Used = Prize.Used
+	pbPrize.Used = Prize.GetBoolUsed()
 	pbPrize.CreatedAt = Prize.CreatedAt.Unix()
 	return pbPrize
 }
@@ -53,9 +53,9 @@ func (this *PrizeService) Insert(ctx context.Context, resq *pb.Prize, resp *pb.P
 		ActivityId: resq.ActivityId,
 		Code:       resq.Code,
 		Level:      resq.Level,
-		Used:       resq.Used,
 		CreatedAt:  time.Unix(resq.CreatedAt, 0),
 	}
+	Prize.SetUsed(resq.Used)
 	_, err := dao.GetPrizeServiceW().Insert(Prize)
 	if err == nil {
 		CopyPrizeDaoToPb(Prize, resp)
@@ -85,5 +85,37 @@ func (this *PrizeService) ChooseOneUsedPrize(ctx context.Context, resq *pb.Choos
 		config.Logger().Infof("Prize service:use prize err: %v", prize)
 	}
 	CopyPrizeDaoToPb(prize, resp)
+	return nil
+}
+
+func (this *PrizeService) InsertBatch(ctx context.Context, resq *pb.PrizeAdd, resp *pb.ResponseEffect) error {
+	wechat := dao.GetWechatServiceR().GetById(resq.Wid)
+	activity := dao.GetActivityServiceR().GetById(resq.ActivityId)
+	if activity == nil || wechat == nil {
+		config.Logger().Infof("Prize service batch insert activity[%d] or wechat[%d] not exist", resq.ActivityId, resq.Wid)
+		return nil
+	}
+	prizes := make([]*dao.PrizeModel, 0)
+	resp.Success = true
+	for _, prize := range resq.Codes {
+		prizes = append(prizes, &dao.PrizeModel{
+			Wid: resq.Wid, Level: resq.Level, ActivityId: resq.ActivityId, Code: prize, Used: common.NO_VALUE,
+		})
+		if len(prizes) == dao.INSER_DEFAULT_ROWS_EACH { //每INSER_DEFAULT_ROWS_EACH insert次
+			rows, err := dao.GetPrizeServiceW().InsertBatch(prizes)
+			if err != nil {
+				config.Logger().Errorf("Prize service bash insert err: %v", err)
+			}
+			prizes = (prizes)[0:0] //清空
+			resp.Effect += rows
+		}
+	}
+	if prizes != nil && len(prizes) > 0 {
+		rows, err := dao.GetPrizeServiceW().InsertBatch(prizes)
+		if err != nil {
+			config.Logger().Errorf("Prize service bash insert err: %v", err)
+		}
+		resp.Effect += rows
+	}
 	return nil
 }

@@ -32,4 +32,6 @@ const (
 	MAX_LUCKY_NUM = 10000
 
 	LIST_DEFAULT_ROWS = 20
+
+	INSER_DEFAULT_ROWS_EACH = 150 //每次批量插入数
 )

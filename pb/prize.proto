@@ -17,6 +17,14 @@ message PrizeList {
     int64 total = 3;
     repeated Prize prizes = 4;
 }
+
+message PrizeAdd {
+    int64 wid = 1;
+    int64 activityId = 2;
+    string level = 3;
+    repeated string codes = 4;
+}
+
 message ChooseOneUsedPrize {
     int64  activityId = 1;
     string level = 2;

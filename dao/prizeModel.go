@@ -26,12 +26,27 @@ type PrizeModel struct {
 	ActivityId int64
 	Code       string
 	Level      string
-	Used       bool //tinyint(1)
+	Used       int8
 	CreatedAt  time.Time
 }
 
 func (this *PrizeModel) TableName() string {
 	return "prizes"
+}
+
+func (this *PrizeModel) GetBoolUsed() bool {
+	if this.Used == common.YES_VALUE {
+		return true
+	}
+	return false
+}
+
+func (this *PrizeModel) SetUsed(bl bool) {
+	if bl {
+		this.Used = common.YES_VALUE
+	} else {
+		this.Used = common.NO_VALUE
+	}
 }
 
 func (this *PrizeModel) GetOneUsedPrize(activityId int64, level string, idGt int64) *PrizeModel {
@@ -55,9 +70,9 @@ func (this *PrizeModel) UsePrize(prize *PrizeModel) bool {
 	if prize == nil || prize.Id < 0 {
 		return false
 	}
-	prize.Used = true
+	prize.Used = common.YES_VALUE
 	_, err := config.GetDbW(APP_DB_WRITE).
-		Where("id = ? and used = ?", prize.Id, 0).
+		Where("id = ? and used = ?", prize.Id, common.NO_VALUE).
 		Cols("used").
 		Update(prize)
 	if err != nil {
@@ -72,6 +87,28 @@ func (this *PrizeModel) Insert(prize *PrizeModel) (int64, error) {
 
 func (this *PrizeModel) InsertBatch(prizes []*PrizeModel) (int64, error) {
 	return config.GetDbW(APP_DB_WRITE).Insert(&prizes)
+	//i := 0
+	//for lens := len(prizes); ; i++ {
+	//	if lens >= INSER_DEFAULT_ROWS_EACH*(i+1) {
+	//		prizePre := prizes[i*INSER_DEFAULT_ROWS_EACH : (i+1)*INSER_DEFAULT_ROWS_EACH-1]
+	//		_, err = config.GetDbW(APP_DB_WRITE).Insert(&prizePre)
+	//		if err != nil {
+	//			config.Logger().Errorf("Prize insert batch err: %v", err)
+	//		}
+	//		if lens == INSER_DEFAULT_ROWS_EACH*(i+1) {
+	//			break
+	//		}
+	//	} else if lens > INSER_DEFAULT_ROWS_EACH*i {
+	//		prizePre := prizes[i*INSER_DEFAULT_ROWS_EACH : (i+1)*INSER_DEFAULT_ROWS_EACH]
+	//		rows, err = config.GetDbW(APP_DB_WRITE).Insert(&prizePre)
+	//		if err != nil {
+	//			config.Logger().Errorf("Prize insert batch err: %v", err)
+	//		}
+	//		break
+	//	}
+	//}
+	//rows += INSER_DEFAULT_ROWS_EACH * int64(i)
+	//return rows, err
 }
 
 func (this *PrizeModel) Update(prize *PrizeModel) (int64, error) {

@@ -16,16 +16,16 @@ var (
 func main() {
 	flag.Parse()
 
-	d := client.NewPeer2PeerDiscovery("tcp@"+*addr, "")
+	discovery := client.NewPeer2PeerDiscovery("tcp@"+*addr, "")
 	opt := client.DefaultOption
 	opt.SerializeType = protocol.ProtoBuffer
 
-	xclient := client.NewXClient("Checkin", client.Failtry, client.RandomSelect, d, opt)
+	xclient := client.NewXClient("Prize", client.Failtry, client.RandomSelect, discovery, opt)
 	defer xclient.Close()
 
-	args := &pb.RequestById{Id: 2}
+	args := &pb.PrizeAdd{Wid: 1, ActivityId: 2, Codes: []string{"111111"}}
 	reply := &pb.ResponseEffect{}
-	err := xclient.Call(context.Background(), "LimitByWid", args, reply)
+	err := xclient.Call(context.Background(), "InsertBatch", args, reply)
 	if err != nil {
 		log.Fatalf("failed to call: %v", err)
 	}
