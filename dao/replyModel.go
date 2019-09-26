@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"rpc/common"
 	"rpc/config"
 	"strconv"
 	"time"
@@ -9,13 +8,14 @@ import (
 
 type ReplyInterfaceR interface {
 	GetById(int64) *ReplyModel
-	FindOne(*ReplyModel) *ReplyModel
-	LimitUnderWidList(wid int64, index int, limit int) []*ReplyModel
+	FindOneByAliasOrClickKey(int64, string, string) *ReplyModel
+	LimitByWid(wid int64, index int, limit int) []*ReplyModel
+	Count(*ReplyModel) int64
 }
 
 type ReplyInterfaceW interface {
 	Insert(*ReplyModel) (int64, error)
-	ChangeDisabledByWidActivityId(wid, activityId int64, disabled int8) bool
+	ChangeStatusByWidActivityId(wid, activityId int64, status int8) bool
 	Update(*ReplyModel) (int64, error)
 	DeleteById(int64) bool
 }
@@ -31,10 +31,10 @@ type ReplyModel struct {
 	NoPrizeReturn string
 	Extra         string
 	Type          string
-	Disabled      int8
-	Match         int8
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Status        int8
+	Match         string
+	CreatedAt     time.Time `xorm:"created"`
+	UpdatedAt     time.Time `xorm:"updated"`
 }
 
 func (r *ReplyModel) TableName() string {
@@ -65,25 +65,25 @@ func (r *ReplyModel) GetById(id int64) *ReplyModel {
  * @Param Reply.ClickKey string
  * @Success Reply
  */
-func (r *ReplyModel) FindOne(model *ReplyModel) *ReplyModel {
-	if model.Wid == 0 || ("" == model.Alias && "" == model.ClickKey) {
+func (r *ReplyModel) FindOneByAliasOrClickKey(wid int64, alias, clickKey string) *ReplyModel {
+	if wid < 0 || ("" == alias && "" == clickKey) {
 		return nil
 	}
-	qs := config.GetDbR(APP_DB_READ).Where("wid = ?", model.Wid)
-	if "" != model.Alias {
-		qs = qs.Where("alias = ?", model.Alias)
-	} else if "" != r.ClickKey {
-		qs = qs.Where("click_key = ?", model.ClickKey)
+	qs := config.GetDbR(APP_DB_READ).Where("wid = ?", wid)
+	if "" != alias {
+		qs = qs.Where("alias = ?", alias)
+	} else if "" != clickKey {
+		qs = qs.Where("click_key = ?", clickKey)
 	}
 	reply := new(ReplyModel)
-	has, err := qs.Where("disabled = ?", common.NO_VALUE).Get(reply)
+	has, err := qs.Where("status = ?", REPLT_STATUS_OPEN).Get(reply)
 	if !has || err != nil {
 		return nil
 	}
 	return reply
 }
 
-func (r *ReplyModel) LimitUnderWidList(wid int64, index int, limit int) (relpies []*ReplyModel) {
+func (r *ReplyModel) LimitByWid(wid int64, index int, limit int) (relpies []*ReplyModel) {
 	if wid == 0 || (index < 1 && limit < 1) {
 		return nil
 	}
@@ -94,8 +94,16 @@ func (r *ReplyModel) LimitUnderWidList(wid int64, index int, limit int) (relpies
 	return relpies
 }
 
-func (r *ReplyModel) ChangeDisabledByWidActivityId(wid, activityId int64, disabled int8) bool {
-	if wid == 0 || activityId == 0 {
+func (this *ReplyModel) Count(reply *ReplyModel) int64 {
+	total, err := config.GetDbW(APP_DB_WRITE).Count(reply)
+	if err != nil {
+		return 0
+	}
+	return total
+}
+
+func (r *ReplyModel) ChangeStatusByWidActivityId(wid, activityId int64, status int8) bool {
+	if wid < 1 || activityId < 1 {
 		return false
 	}
 	reply := ReplyModel{Wid: wid, ActivityId: activityId}
@@ -103,8 +111,8 @@ func (r *ReplyModel) ChangeDisabledByWidActivityId(wid, activityId int64, disabl
 	if err != nil || has == false {
 		return false
 	}
-	reply.Disabled = disabled
-	_, err = config.GetDbW(APP_DB_WRITE).Id(reply.Id).Cols("disabled").Update(reply)
+	reply.Status = status
+	_, err = config.GetDbW(APP_DB_WRITE).Id(reply.Id).Cols("status").Update(reply)
 	if err != nil {
 		return false
 	}

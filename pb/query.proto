@@ -13,8 +13,8 @@ message requestById {
     int64 id = 1;
 }
 
-message requestByName {
-    string name = 1;
+message requestBySingleColumn {
+    string column = 1;
 }
 
 message responseEffect {

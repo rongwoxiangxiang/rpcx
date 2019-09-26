@@ -1,13 +1,13 @@
 package dao
 
 import (
+	"rpc/common"
 	"rpc/config"
 	"time"
 )
 
 type WechatInterfaceR interface {
 	GetById(int64) *WechatModel
-	FindByGid(int64) []*WechatModel
 	GetByAppid(string) *WechatModel
 	GetByFlag(string) *WechatModel
 }
@@ -19,19 +19,18 @@ type WechatInterfaceW interface {
 
 type WechatModel struct {
 	Id             int64 `xorm:"pk"`
-	Gid            int64
 	Name           string
 	Appid          string
 	Appsecret      string
 	EncodingAesKey string
 	Token          string
 	Flag           string
-	Type           int8
+	Type           int32
 	Pass           int8
 	SaveInput      int8
-	NeedSaveMen    int8 //该公众号hander是否持久化
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	NeedSaveMen    int8      //该公众号hander是否持久化
+	CreatedAt      time.Time `xorm:"created"`
+	UpdatedAt      time.Time `xorm:"updated"`
 }
 
 func (w *WechatModel) TableName() string {
@@ -59,6 +58,7 @@ func (w *WechatModel) GetById(id int64) *WechatModel {
 		wechat.Id = id
 		has, err := config.GetDbR(APP_DB_READ).Get(wechat)
 		if !has || err != nil {
+			config.Logger().Errorf("Wechat model: getById has[%v] or err: %v", has, err)
 			return nil
 		}
 		return wechat
@@ -90,13 +90,17 @@ func (w *WechatModel) GetByFlag(flag string) *WechatModel {
 	return wechat
 }
 
-func (w *WechatModel) FindByGid(gid int64) (wechats []*WechatModel) {
-	if gid == 0 {
-		return nil
+func (w *WechatModel) SetPass(bool2 bool) {
+	if bool2 {
+		w.Pass = common.YES_VALUE
+	} else {
+		w.Pass = common.NO_VALUE
 	}
-	err := config.GetDbR(APP_DB_READ).Where("gid = ?", gid).Find(&wechats)
-	if err != nil {
-		return nil
+}
+func (w *WechatModel) SetSaveInput(bool2 bool) {
+	if bool2 {
+		w.SaveInput = common.YES_VALUE
+	} else {
+		w.SaveInput = common.NO_VALUE
 	}
-	return wechats
 }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package pb;
+
+message Record {
+    int64 id = 1;
+    int64 wid = 2;
+    int64 wuid = 3;
+    string Type = 4;
+    string Content = 5;
+    int64  createdAt = 6;
+}
+
+message RecordList {
+    int64 index = 1;
+    int64 limit = 2;
+    int64 total = 3;
+    repeated Record records = 4;
+}

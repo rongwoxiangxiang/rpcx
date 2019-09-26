@@ -1,20 +1,19 @@
 package dao
 
 import (
-	"math/rand"
-	"rpc/common"
 	"rpc/config"
 	"time"
 )
 
 type LotteryInterfaceR interface {
-	List(wid, activityId int64) []*LotteryModel
+	ListByWidAndActivityId(int64, int64) []*LotteryModel
+	Count(*LotteryModel) int64
 }
 
 type LotteryInterfaceW interface {
 	Insert(*LotteryModel) (int64, error)
 	DeleteById(int64) bool
-	Luck(wid, activityId int64) (*LotteryModel, error)
+	IncrClaimedNum(*LotteryModel) error
 }
 
 type LotteryModel struct {
@@ -25,11 +24,11 @@ type LotteryModel struct {
 	Desc        string
 	TotalNum    int64
 	ClaimedNum  int64
-	Probability int
+	Probability int32
 	FirstCodeId int64
-	Level       int8
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Level       string
+	CreatedAt   time.Time `xorm:"created"`
+	UpdatedAt   time.Time `xorm:"updated"`
 }
 
 func (this *LotteryModel) TableName() string {
@@ -51,50 +50,21 @@ func (this *LotteryModel) DeleteById(id int64) bool {
 	return true
 }
 
-//抽奖
-func (this *LotteryModel) Luck(wid, activityId int64) (lottery *LotteryModel, err error) {
-	lotteries := this.List(wid, activityId)
-	if len(lotteries) < 1 {
-		return nil, common.ErrDataUnExist
-	}
-	max := MAX_LUCKY_NUM
-	actvityFinished := true
-	for _, lot := range lotteries {
-		if lot.ClaimedNum >= lot.TotalNum { //当前奖品发放完毕
-			max -= lot.Probability
-			continue
-		}
-		actvityFinished = false
-		random := rand.Intn(max)
-		if random <= lot.Probability {
-			lottery = lot
-			break
-		}
-		max -= lot.Probability
-	}
-	if actvityFinished { //全部奖品发放完毕，自动结束活动
-		(&ReplyModel{Wid: this.Wid, ActivityId: this.ActivityId}).ChangeDisabledByWidActivityId(wid, activityId, common.YES_VALUE)
-		return nil, common.ErrLuckFinal
-	}
-
-	if lottery == nil {
-		return nil, common.ErrLuckFail
-	}
-	claimedNum := lottery.ClaimedNum
-	lottery.ClaimedNum = claimedNum + 1
-	_, err = config.GetDbW(APP_DB_WRITE).
+func (this *LotteryModel) IncrClaimedNum(lottery *LotteryModel) error {
+	claimedNum := this.ClaimedNum + 1
+	_, err := config.GetDbW(APP_DB_WRITE).
 		Table(new(LotteryModel)).
-		Where("id = ? and claimed_num = ?", lottery.Id, claimedNum).
+		Where("id = ? and claimed_num = ?", this.Id, claimedNum).
 		Cols("claimed_num").
 		Update(lottery)
 	if err != nil {
-		return nil, common.ErrDataUpdate
+		config.Logger().Errorf("LotteryModel IncrClaimedNum Lottery:%v, err: %v", this, err)
 	}
-	return lottery, err
+	return err
 }
 
-func (this *LotteryModel) List(wid, activityId int64) (lotteries []*LotteryModel) {
-	if activityId == 0 || wid == 0 {
+func (this *LotteryModel) ListByWidAndActivityId(wid, activityId int64) (lotteries []*LotteryModel) {
+	if activityId < 1 || wid < 1 {
 		return nil
 	}
 	err := config.GetDbR(APP_DB_READ).Where("wid = ? and activity_id = ?", wid, activityId).OrderBy("probability desc").Find(&lotteries)
@@ -102,4 +72,12 @@ func (this *LotteryModel) List(wid, activityId int64) (lotteries []*LotteryModel
 		lotteries = nil
 	}
 	return lotteries
+}
+
+func (this *LotteryModel) Count(lottery *LotteryModel) int64 {
+	total, err := config.GetDbW(APP_DB_WRITE).Count(lottery)
+	if err != nil {
+		return 0
+	}
+	return total
 }

@@ -7,8 +7,9 @@ import (
 
 type RecordInterfaceR interface {
 	GetById(int64) *RecordModel
-	LimitUnderWidList(wid int64, index int, limit int) []*RecordModel
-	LimitUnderWuidList(wuid int64, index int, limit int) []*RecordModel
+	LimitByWid(int64, int, int) []*RecordModel
+	LimitByWuid(int64, int, int) []*RecordModel
+	Count(*RecordModel) int64
 }
 
 type RecordInterfaceW interface {
@@ -21,7 +22,7 @@ type RecordModel struct {
 	Wuid      int64
 	Type      string
 	Content   string
-	CreatedAt time.Time
+	CreatedAt time.Time `xorm:"created"`
 }
 
 func (this *RecordModel) TableName() string {
@@ -47,7 +48,7 @@ func (this *RecordModel) GetById(id int64) *RecordModel {
 }
 
 //通过wid查找
-func (r *RecordModel) LimitUnderWidList(wid int64, index int, limit int) (records []*RecordModel) {
+func (r *RecordModel) LimitByWid(wid int64, index int, limit int) (records []*RecordModel) {
 	if wid == 0 || (index < 1 && limit < 1) {
 		return nil
 	}
@@ -59,7 +60,7 @@ func (r *RecordModel) LimitUnderWidList(wid int64, index int, limit int) (record
 }
 
 //通过wuid查找
-func (r *RecordModel) LimitUnderWuidList(wuid int64, index int, limit int) (records []*RecordModel) {
+func (r *RecordModel) LimitByWuid(wuid int64, index int, limit int) (records []*RecordModel) {
 	if wuid == 0 || (index < 1 && limit < 1) {
 		return nil
 	}
@@ -68,4 +69,12 @@ func (r *RecordModel) LimitUnderWuidList(wuid int64, index int, limit int) (reco
 		return nil
 	}
 	return records
+}
+
+func (this *RecordModel) Count(record *RecordModel) int64 {
+	total, err := config.GetDbW(APP_DB_WRITE).Count(record)
+	if err != nil {
+		return 0
+	}
+	return total
 }

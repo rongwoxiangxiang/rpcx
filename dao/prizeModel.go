@@ -8,7 +8,7 @@ import (
 
 type PrizeInterfaceR interface {
 	GetOneUsedPrize(int64, string, int64) *PrizeModel
-	LimitByActivityId(int64, int, int) []*PrizeModel
+	LimitByActivityIdAndUsed(int64, int8, int, int) []*PrizeModel
 	Count(*PrizeModel) int64
 }
 
@@ -27,7 +27,7 @@ type PrizeModel struct {
 	Code       string
 	Level      string
 	Used       int8
-	CreatedAt  time.Time
+	CreatedAt  time.Time `xorm:"created"`
 }
 
 func (this *PrizeModel) TableName() string {
@@ -41,11 +41,13 @@ func (this *PrizeModel) GetBoolUsed() bool {
 	return false
 }
 
-func (this *PrizeModel) SetUsed(bl bool) {
-	if bl {
+func (this *PrizeModel) SetUsed(used int8) {
+	if used == common.YES_VALUE {
 		this.Used = common.YES_VALUE
-	} else {
+	} else if used == common.NO_VALUE {
 		this.Used = common.NO_VALUE
+	} else {
+		config.Logger().Warnf("prize model: SetUsedString with unexpect value: ", used)
 	}
 }
 
@@ -53,11 +55,15 @@ func (this *PrizeModel) GetOneUsedPrize(activityId int64, level string, idGt int
 	if activityId < 1 {
 		return nil
 	}
+	qs := config.GetDbR(APP_DB_READ).Where("activity_id = ? AND used = ?", activityId, common.NO_VALUE)
 	if idGt > 0 {
-		config.GetDbR(APP_DB_READ).Where("id >= ?", idGt)
+		qs = qs.Where("id >= ?", idGt)
+	}
+	if level != "" {
+		qs = qs.Where("level = ?", level)
 	}
 	prize := new(PrizeModel)
-	has, err := config.GetDbR(APP_DB_READ).Where("activity_id = ? AND level = '?' AND used = ?", activityId, level, common.NO_VALUE).Get(prize)
+	has, err := qs.Get(prize)
 	if err != nil {
 		config.Logger().Errorf("prize model: GetOneUsedPrize err: %t", err)
 	} else if has == false {
@@ -126,11 +132,15 @@ func (this *PrizeModel) DeleteById(id int64) bool {
 	return true
 }
 
-func (this *PrizeModel) LimitByActivityId(activityId int64, index int, limit int) (prizes []*PrizeModel) {
-	if activityId == 0 || (index < 1 && limit < 1) {
+func (this *PrizeModel) LimitByActivityIdAndUsed(activityId int64, used int8, index int, limit int) (prizes []*PrizeModel) {
+	if activityId == 0 || index < 0 || limit < 1 {
 		return nil
 	}
-	err := config.GetDbR(APP_DB_READ).Where("acitivity_id = ?", activityId).Limit(limit, (index-1)*limit).Find(&prizes)
+	qs := config.GetDbR(APP_DB_READ).Where("activity_id = ?", activityId).Limit(limit, (index-1)*limit)
+	if used == common.YES_VALUE || used == common.NO_VALUE {
+		qs = qs.Where("used = ?", used)
+	}
+	err := qs.Find(&prizes)
 	if err != nil {
 		return nil
 	}

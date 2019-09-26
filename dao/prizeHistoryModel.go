@@ -8,7 +8,8 @@ import (
 
 type PrizeHistoryInterfaceR interface {
 	GetByActivityWuId(activityId, wuid int64) (*PrizeHistoryModel, error)
-	LimitUnderActivityList(activityId int64, index int, limit int) []*PrizeHistoryModel
+	LimitByActivityList(activityId int64, index int, limit int) []*PrizeHistoryModel
+	Count(*PrizeHistoryModel) int64
 }
 
 type PrizeHistoryInterfaceW interface {
@@ -22,8 +23,8 @@ type PrizeHistoryModel struct {
 	Wuid       int64
 	Prize      string
 	Code       string
-	Level      int8
-	CreatedAt  time.Time
+	Level      string
+	CreatedAt  time.Time `xorm:"created"`
 }
 
 func (this *PrizeHistoryModel) TableName() string {
@@ -44,11 +45,11 @@ func (this *PrizeHistoryModel) GetByActivityWuId(activityId, wuid int64) (*Prize
 	return history, nil
 }
 
-func (this *PrizeHistoryModel) LimitUnderActivityList(activityId int64, index int, limit int) (histories []*PrizeHistoryModel) {
+func (this *PrizeHistoryModel) LimitByActivityList(activityId int64, index int, limit int) (histories []*PrizeHistoryModel) {
 	if activityId == 0 || (index < 1 && limit < 1) {
 		return nil
 	}
-	err := config.GetDbR(APP_DB_READ).Where("acitivity_id = ?", activityId).Limit(limit, (index-1)*limit).Find(&histories)
+	err := config.GetDbR(APP_DB_READ).Where("activity_id = ?", activityId).Limit(limit, (index-1)*limit).Find(&histories)
 	if err != nil {
 		return nil
 	}
@@ -68,4 +69,12 @@ func (this *PrizeHistoryModel) DeleteById(id int64) bool {
 		return false
 	}
 	return true
+}
+
+func (this *PrizeHistoryModel) Count(history *PrizeHistoryModel) int64 {
+	total, err := config.GetDbW(APP_DB_WRITE).Count(history)
+	if err != nil {
+		return 0
+	}
+	return total
 }

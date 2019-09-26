@@ -26,8 +26,8 @@ type CheckinModel struct {
 	Liner       int64
 	Total       int64
 	Lastcheckin time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	CreatedAt   time.Time `xorm:"created"`
+	UpdatedAt   time.Time `xorm:"updated"`
 }
 
 func (this *CheckinModel) TableName() string {

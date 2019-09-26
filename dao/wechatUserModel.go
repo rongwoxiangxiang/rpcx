@@ -39,7 +39,7 @@ func (wu *WechatUserModel) TableName() string {
 }
 
 func (this *WechatUserModel) GetById(id int64) (*WechatUserModel, error) {
-	if id != 0 {
+	if id < 1 {
 		return nil, common.ErrDataGet
 	}
 	user := new(WechatUserModel)
@@ -54,7 +54,7 @@ func (this *WechatUserModel) GetById(id int64) (*WechatUserModel, error) {
 }
 
 func (wu *WechatUserModel) GetByWidAndOpenid(wid int64, openid string) (*WechatUserModel, error) {
-	if openid == "" || wid == 0 {
+	if openid == "" || wid < 1 {
 		return nil, common.ErrDataGet
 	}
 	user := new(WechatUserModel)

@@ -9,10 +9,10 @@ import (
 	"unsafe"
 )
 
-type ActivitService struct {
+type ActivityService struct {
 }
 
-func CopyActivitDaoToPb(activity *dao.ActivityModel, pbActivity *pb.Activity) *pb.Activity {
+func CopyActivityDaoToPb(activity *dao.ActivityModel, pbActivity *pb.Activity) *pb.Activity {
 	if pbActivity == nil {
 		pbActivity = new(pb.Activity)
 	}
@@ -29,24 +29,27 @@ func CopyActivitDaoToPb(activity *dao.ActivityModel, pbActivity *pb.Activity) *p
 	return pbActivity
 }
 
-func (this *ActivitService) GetById(ctx context.Context, resq *pb.RequestById, resp *pb.Activity) error {
+func (this *ActivityService) GetById(ctx context.Context, resq *pb.RequestById, resp *pb.Activity) error {
+	if resq.Id < 1 {
+		return nil
+	}
 	activity := dao.GetActivityServiceR().GetById(resq.Id)
-	CopyActivitDaoToPb(activity, resp)
+	CopyActivityDaoToPb(activity, resp)
 	return nil
 }
 
-func (this *ActivitService) LimitByWid(ctx context.Context, resq *pb.RequestList, resp *pb.ActivityList) error {
+func (this *ActivityService) LimitByWid(ctx context.Context, resq *pb.RequestList, resp *pb.ActivityList) error {
 	wid, ok := resq.Params["wid"]
 	if !ok {
 		return nil
 	}
 	widInt64 := util.StringToInt64(wid)
 	activities := dao.GetActivityServiceR().ListByWid(
+		widInt64,
 		*(*int)(unsafe.Pointer(&resq.Index)),
-		*(*int)(unsafe.Pointer(&resq.Limit)),
-		widInt64)
+		*(*int)(unsafe.Pointer(&resq.Limit)))
 	for _, activity := range activities {
-		resp.Activities = append(resp.Activities, CopyActivitDaoToPb(activity, nil))
+		resp.Activities = append(resp.Activities, CopyActivityDaoToPb(activity, nil))
 	}
 	resp.Limit = resq.Limit
 	resp.Index = resq.Index
@@ -54,7 +57,7 @@ func (this *ActivitService) LimitByWid(ctx context.Context, resq *pb.RequestList
 	return nil
 }
 
-func (this *ActivitService) Insert(ctx context.Context, resq *pb.Activity, resp *pb.Activity) error {
+func (this *ActivityService) Insert(ctx context.Context, resq *pb.Activity, resp *pb.Activity) error {
 	activity := &dao.ActivityModel{
 		Name:         resq.Name,
 		Desc:         resq.Desc,
@@ -65,12 +68,12 @@ func (this *ActivitService) Insert(ctx context.Context, resq *pb.Activity, resp 
 	}
 	_, err := dao.GetActivityServiceW().Insert(activity)
 	if err == nil {
-		CopyActivitDaoToPb(activity, resp)
+		CopyActivityDaoToPb(activity, resp)
 	}
 	return err
 }
 
-func (this *ActivitService) Update(ctx context.Context, resq *pb.Activity, resp *pb.ResponseEffect) error {
+func (this *ActivityService) Update(ctx context.Context, resq *pb.Activity, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
 		return nil
 	}
@@ -90,7 +93,7 @@ func (this *ActivitService) Update(ctx context.Context, resq *pb.Activity, resp 
 	return err
 }
 
-func (this *ActivitService) Delete(ctx context.Context, resq *pb.RequestById, resp *pb.ResponseEffect) error {
+func (this *ActivityService) Delete(ctx context.Context, resq *pb.RequestById, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
 		return nil
 	}

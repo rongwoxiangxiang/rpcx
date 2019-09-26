@@ -7,7 +7,7 @@ import (
 
 type ActivityInterfaceR interface {
 	GetById(int64) *ActivityModel
-	ListByWid(int, int, int64) []*ActivityModel
+	ListByWid(int64, int, int) []*ActivityModel
 	Count(*ActivityModel) int64
 }
 
@@ -27,8 +27,8 @@ type ActivityModel struct {
 	Extra        string
 	TimeStarted  time.Time
 	TimeEnd      time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	CreatedAt    time.Time `xorm:"created"`
+	UpdatedAt    time.Time `xorm:"updated"`
 }
 
 func (this *ActivityModel) TableName() string {
@@ -48,7 +48,7 @@ func (this *ActivityModel) GetById(id int64) *ActivityModel {
 	return nil
 }
 
-func (this *ActivityModel) ListByWid(index, limit int, wid int64) (activities []*ActivityModel) {
+func (this *ActivityModel) ListByWid(wid int64, index, limit int) (activities []*ActivityModel) {
 	if index < 0 || wid < 1 || limit < 1 {
 		return nil
 	}

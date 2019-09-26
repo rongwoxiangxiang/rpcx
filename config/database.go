@@ -5,6 +5,7 @@ import (
 	"github.com/go-xorm/xorm"
 	"github.com/pelletier/go-toml"
 	"strings"
+	"time"
 )
 
 var (
@@ -38,6 +39,7 @@ func InitStoreDb(sources *toml.Tree) {
 func initMysqlDb(source string) *xorm.Engine {
 	engine, err := xorm.NewEngine("mysql", source)
 	engine.ShowSQL(debug)
+	engine.TZLocation, _ = time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		logger.Errorf("orm failed to initialized: %v", err)
 		return nil

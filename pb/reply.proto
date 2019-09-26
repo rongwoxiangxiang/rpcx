@@ -1,0 +1,40 @@
+syntax = "proto3";
+package pb;
+
+message Reply {
+    int64  id = 1;
+    int64  wid = 2;
+    int64  activityId = 3;
+    string alias = 4;
+    string clickKey = 5;
+    string success = 6;
+    string fail = 7;
+    string noPrizeReturn = 8;
+    string extra = 9;
+    string type = 10;
+    string match = 11;
+    ReplyStatus status = 12;
+    int64  createdAt = 13;
+    int64  updatedAt = 14;
+}
+
+message ReplyList {
+    int64 index = 1;
+    int64 limit = 2;
+    int64 total = 3;
+    repeated Reply replies = 4;
+}
+
+enum ReplyStatus
+{
+    INIT = 0; //proto3版本中，首成员必须为0，成员不应有相同的值
+    OPEN = 1; //开启
+    MANUAL_CLOSE = 2; //手动关闭
+    AUTO_CLOSE   = 3; //自动关闭
+}
+
+message StatusByWidActivityId{
+    int64 wid = 1;
+    int64 activityId = 2;
+    ReplyStatus status = 3;
+}

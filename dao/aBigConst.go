@@ -34,4 +34,8 @@ const (
 	LIST_DEFAULT_ROWS = 20
 
 	INSER_DEFAULT_ROWS_EACH = 150 //每次批量插入数
+
+	REPLT_STATUS_OPEN         = 1 //开启回复
+	REPLT_STATUS_MANUAL_CLOSE = 2 //手动关闭
+	REPLT_STATUS_AUTO_CLOSE   = 3 //自动关闭
 )

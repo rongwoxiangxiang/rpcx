@@ -14,7 +14,7 @@ func main() {
 	flag.Parse()
 
 	s := server.NewServer()
-	s.RegisterName("Activity", new(service.ActivitService), "")
+	s.RegisterName("Activity", new(service.ActivityService), "")
 	s.RegisterName("Prize", new(service.PrizeService), "")
 	err := s.Serve("tcp", *addr)
 	if err != nil {

@@ -1,6 +1,12 @@
 package common
 
 const (
-	YES_VALUE = 1
-	NO_VALUE  = 2
+	NONE_VALUE = iota
+	YES_VALUE
+	NO_VALUE
+)
+
+const (
+	YES_VALUE_STRING = "1"
+	NO_VALUE_STRING  = "2"
 )

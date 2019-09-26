@@ -6,6 +6,7 @@ import (
 	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/protocol"
 	"log"
+	"rpc/common"
 	"rpc/pb"
 )
 
@@ -23,9 +24,9 @@ func main() {
 	xclient := client.NewXClient("Prize", client.Failtry, client.RandomSelect, discovery, opt)
 	defer xclient.Close()
 
-	args := &pb.PrizeAdd{Wid: 1, ActivityId: 2, Codes: []string{"111111"}}
-	reply := &pb.ResponseEffect{}
-	err := xclient.Call(context.Background(), "InsertBatch", args, reply)
+	args := &pb.RequestList{Limit: 20, Params: map[string]string{"wid": "2", "used": common.NO_VALUE_STRING}}
+	reply := &pb.PrizeList{}
+	err := xclient.Call(context.Background(), "LimitByActivityIdAndUsed", args, reply)
 	if err != nil {
 		log.Fatalf("failed to call: %v", err)
 	}
