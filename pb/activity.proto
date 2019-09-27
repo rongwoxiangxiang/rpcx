@@ -1,23 +1,23 @@
 syntax = "proto3";
 package pb;
 
-message Activity {
+message activity {
     int64  id = 1;
     int64  wid = 2;
     string name = 3;
     string desc = 4;
-    int32  activityType = 5;
-    int64  relativeId = 6;
+    int32  activity_type = 5;
+    int64  relative_id = 6;
     string extra = 7;
-    int64  timeStarted = 8;
-    int64  timeEnd = 9;
-    int64  createdAt = 10;
-    int64  updatedAt = 11;
+    int64  time_started = 8;
+    int64  time_end = 9;
+    int64  created_at = 10;
+    int64  updated_at = 11;
 }
 
-message ActivityList {
+message activity_list {
     int64 index = 1;
     int64 limit = 2;
     int64 total = 3;
-    repeated Activity activities = 4;
+    repeated activity activities = 4;
 }

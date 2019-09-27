@@ -1,24 +1,24 @@
 syntax = "proto3";
 package pb;
 
-message PrizeHistory {
-    int64 id = 1;
-    int64 wuid = 2;
-    int64 activityId = 3;
+message prize_history {
+    int64  id = 1;
+    int64  wuid = 2;
+    int64  activity_id = 3;
     string prize = 4;
     string code = 5;
     string level = 6;
-    int64 createdAt = 7;
+    int64  created_at = 7;
 }
 
-message PrizeHistoryList {
+message prize_history_list {
     int64 index = 1;
     int64 limit = 2;
     int64 total = 3;
-    repeated PrizeHistory histories = 4;
+    repeated prize_history histories = 4;
 }
 
-message requestOneByActivityWuId {
+message request_one_by_activity_wuid {
     int64 wuid = 1;
-    int64 activityId = 2;
+    int64 activity_id = 2;
 }

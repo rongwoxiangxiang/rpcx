@@ -96,8 +96,8 @@ func (this *PrizeService) DeletePrize(ctx context.Context, resq *pb.RequestById,
 	return nil
 }
 
-func (this *PrizeService) ChooseOneUsedPrize(ctx context.Context, resq *pb.ChooseOneUsedPrize, resp *pb.Prize) error {
-	prize := dao.GetPrizeServiceR().GetOneUsedPrize(resq.ActivityId, resq.Level, resq.GetIdGt())
+func (this *PrizeService) GetOneUnusedPrize(ctx context.Context, resq *pb.OneUnusedPrize, resp *pb.Prize) error {
+	prize := dao.GetPrizeServiceR().GetOneUnusedPrize(resq.ActivityId, resq.Level, resq.GetIdGt())
 	if prize == nil || prize.Id < 1 {
 		return common.ErrLuckFinal
 	}
@@ -141,7 +141,7 @@ func (this *PrizeService) BatchInsertPrize(ctx context.Context, resq *pb.PrizeAd
 	return nil
 }
 
-func (this *PrizeService) GetByActivityWuId(ctx context.Context, resq *pb.RequestOneByActivityWuId, resp *pb.PrizeHistory) error {
+func (this *PrizeService) GetByActivityWuId(ctx context.Context, resq *pb.RequestOneByActivityWuid, resp *pb.PrizeHistory) error {
 	history, err := dao.GetPrizeHistoryServiceR().GetByActivityWuId(resq.ActivityId, resq.Wuid)
 	if err != nil {
 		return err

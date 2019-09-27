@@ -1,25 +1,25 @@
 syntax = "proto3";
 package pb;
 
-message Wechat {
+message wechat {
     int64  id = 1;
     string name = 2;
     string appid = 3;
     string appsecret = 4;
-    string encodingAesKey = 5;
-    string Token = 6;
+    string encoding_aes_key = 5;
+    string token = 6;
     string flag = 7;
-    int32  Type = 8;
-    bool   Pass = 9;
-    bool   SaveInput = 10;
-    bool   NeedSaveMen = 11;
-    int64  createdAt = 12;
-    int64  updatedAt = 13;
+    int32  type = 8;
+    bool   pass = 9;
+    bool   save_input = 10;
+    bool   need_save_men = 11;
+    int64  created_at = 12;
+    int64  updated_at = 13;
 }
 
-message WechatList {
+message wechat_list {
     int64 index = 1;
     int64 limit = 2;
     int64 total = 3;
-    repeated Wechat wechats = 4;
+    repeated wechat wechats = 4;
 }

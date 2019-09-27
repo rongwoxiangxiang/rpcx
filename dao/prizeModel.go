@@ -7,7 +7,7 @@ import (
 )
 
 type PrizeInterfaceR interface {
-	GetOneUsedPrize(int64, string, int64) *PrizeModel
+	GetOneUnusedPrize(int64, string, int64) *PrizeModel
 	LimitByActivityIdAndUsed(int64, int8, int, int) []*PrizeModel
 	Count(*PrizeModel) int64
 }
@@ -51,7 +51,7 @@ func (this *PrizeModel) SetUsed(used int8) {
 	}
 }
 
-func (this *PrizeModel) GetOneUsedPrize(activityId int64, level string, idGt int64) *PrizeModel {
+func (this *PrizeModel) GetOneUnusedPrize(activityId int64, level string, idGt int64) *PrizeModel {
 	if activityId < 1 {
 		return nil
 	}

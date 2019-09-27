@@ -58,8 +58,8 @@ func (this *ReplyService) LimitByWid(ctx context.Context, resq *pb.RequestList, 
 		widInt64,
 		*(*int)(unsafe.Pointer(&resq.Index)),
 		*(*int)(unsafe.Pointer(&resq.Limit)))
-	for _, record := range records {
-		resp.Replies = append(resp.Replies, CopyReplyDaoToPb(record, nil))
+	for _, reply := range records {
+		resp.Replies = append(resp.Replies, CopyReplyDaoToPb(reply, nil))
 	}
 	resp.Limit = resq.Limit
 	resp.Index = resq.Index

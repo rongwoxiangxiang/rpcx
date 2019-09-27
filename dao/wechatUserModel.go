@@ -7,9 +7,10 @@ import (
 )
 
 type WechatUserInterfaceR interface {
-	GetById(id int64) (*WechatUserModel, error)
-	GetByWidAndOpenid(wid int64, openid string) (*WechatUserModel, error)
-	LimitUnderWidList(index int, limit int) ([]*WechatUserModel, error)
+	GetById(id int64) *WechatUserModel
+	GetByWidAndOpenid(wid int64, openid string) *WechatUserModel
+	LimitByWid(int64, int, int) []*WechatUserModel
+	Count(*WechatUserModel) int64
 }
 
 type WechatUserInterfaceW interface {
@@ -24,7 +25,7 @@ type WechatUserModel struct {
 	UserId     int64     `xorm:"user_id"`
 	Openid     string    `xorm:"varchar(64)"`
 	Nickname   string    `xorm:"varchar(64)"`
-	Sex        int       `xorm:"sex"`
+	Sex        int8      `xorm:"sex"`
 	Province   string    `xorm:"varchar(20)"`
 	City       string    `xorm:"varchar(20)"`
 	Country    string    `xorm:"varchar(20)"`
@@ -34,13 +35,13 @@ type WechatUserModel struct {
 	UpdatedAt  time.Time `xorm:"updated"`
 }
 
-func (wu *WechatUserModel) TableName() string {
+func (this *WechatUserModel) TableName() string {
 	return "wechat_users"
 }
 
-func (this *WechatUserModel) GetById(id int64) (*WechatUserModel, error) {
+func (this *WechatUserModel) GetById(id int64) *WechatUserModel {
 	if id < 1 {
-		return nil, common.ErrDataGet
+		return nil
 	}
 	user := new(WechatUserModel)
 	user.Id = id
@@ -50,32 +51,40 @@ func (this *WechatUserModel) GetById(id int64) (*WechatUserModel, error) {
 	} else if has == false {
 		err = common.ErrDataEmpty
 	}
-	return user, err
+	return user
 }
 
-func (wu *WechatUserModel) GetByWidAndOpenid(wid int64, openid string) (*WechatUserModel, error) {
+func (wu *WechatUserModel) GetByWidAndOpenid(wid int64, openid string) *WechatUserModel {
 	if openid == "" || wid < 1 {
-		return nil, common.ErrDataGet
+		return nil
 	}
 	user := new(WechatUserModel)
 	user.Wid = wid
 	user.Openid = openid
 	has, err := config.GetDbR(APP_DB_READ).Get(user)
 	if err != nil {
-		return nil, common.ErrDataGet
+		config.Logger().Errorf("wechatUserModel: GetByWidAndOpenid user: %v, err: %v", user, err)
+		return nil
 	} else if has == false {
-		return nil, common.ErrDataEmpty
+		return nil
 	}
-	return user, err
+	return user
 }
 
-func (wu *WechatUserModel) LimitUnderWidList(index int, limit int) (users []*WechatUserModel, err error) {
-	err = config.GetDbR(APP_DB_READ).Where("wid = ?", wu.Wid).Limit(limit, (index-1)*limit).Find(&users)
+func (wu *WechatUserModel) LimitByWid(wid int64, index int, limit int) (users []*WechatUserModel) {
+	err := config.GetDbR(APP_DB_READ).Where("wid = ?", wid).Limit(limit, (index-1)*limit).Find(&users)
 	if err != nil {
-		return nil, common.ErrDataFind
+		return nil
 	}
-	return users, nil
+	return users
+}
 
+func (this *WechatUserModel) Count(user *WechatUserModel) int64 {
+	total, err := config.GetDbW(APP_DB_WRITE).Count(user)
+	if err != nil {
+		return 0
+	}
+	return total
 }
 
 func (wu *WechatUserModel) Insert(user *WechatUserModel) (int64, error) {

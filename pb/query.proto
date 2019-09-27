@@ -1,7 +1,7 @@
 syntax = "proto3";
 package pb;
 
-message requestList {
+message request_list {
     int64 index = 1;
     int64 limit = 2;
     int64 gt = 3;
@@ -9,15 +9,15 @@ message requestList {
     map<string, string> params = 5;
 }
 
-message requestById {
+message request_by_id {
     int64 id = 1;
 }
 
-message requestBySingleColumn {
+message request_by_single_column {
     string column = 1;
 }
 
-message responseEffect {
+message response_effect {
     bool success = 1;
     int64 effect = 2;
 }
