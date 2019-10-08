@@ -1,13 +1,12 @@
 package dao
 
 import (
-	"rpc/common"
 	"rpc/config"
 	"time"
 )
 
 type PrizeHistoryInterfaceR interface {
-	GetByActivityWuId(activityId, wuid int64) (*PrizeHistoryModel, error)
+	GetByActivityWuId(activityId, wuid int64) *PrizeHistoryModel
 	LimitByActivityList(activityId int64, index int, limit int) []*PrizeHistoryModel
 	Count(*PrizeHistoryModel) int64
 }
@@ -32,23 +31,18 @@ func (this *PrizeHistoryModel) TableName() string {
 }
 
 //取最后一条领取记录
-func (this *PrizeHistoryModel) GetByActivityWuId(activityId, wuid int64) (*PrizeHistoryModel, error) {
+func (this *PrizeHistoryModel) GetByActivityWuId(activityId, wuid int64) *PrizeHistoryModel {
 	history := new(PrizeHistoryModel)
 	history.Wuid = wuid
 	history.ActivityId = activityId
-	has, err := config.GetDbR(APP_DB_READ).Desc("id").Get(history)
-	if err != nil {
-		return nil, common.ErrDataGet
-	} else if has == false {
-		return nil, common.ErrDataEmpty
+	has, _ := config.GetDbR(APP_DB_READ).Desc("id").Get(history)
+	if has == false {
+		return nil
 	}
-	return history, nil
+	return history
 }
 
 func (this *PrizeHistoryModel) LimitByActivityList(activityId int64, index int, limit int) (histories []*PrizeHistoryModel) {
-	if activityId == 0 || (index < 1 && limit < 1) {
-		return nil
-	}
 	err := config.GetDbR(APP_DB_READ).Where("activity_id = ?", activityId).Limit(limit, (index-1)*limit).Find(&histories)
 	if err != nil {
 		return nil

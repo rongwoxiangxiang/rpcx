@@ -25,3 +25,14 @@ func InitLogger(conf *toml.Tree) {
 func Logger() *logrus.Logger {
 	return logger
 }
+
+func LoggerWithField(key string, value interface{}) *logrus.Logger {
+	return logger.WithField(key, value).Logger
+}
+
+/**
+ * logrus.Fields <=> map[string]interface{}
+ */
+func LoggerWithFields(fields logrus.Fields) *logrus.Logger {
+	return logger.WithFields(fields).Logger
+}

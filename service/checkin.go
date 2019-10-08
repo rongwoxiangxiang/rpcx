@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"rpc/common"
+	"rpc/config"
 	"rpc/dao"
 	"rpc/pb"
 	"rpc/util"
@@ -28,34 +30,44 @@ func CopyCheckinDaoToPb(checkin *dao.CheckinModel, pbCheckin *pb.Checkin) *pb.Ch
 }
 
 func (this *CheckinService) GetCheckinInfoByActivityIdAndWuid(ctx context.Context, resq *pb.Checkin, resp *pb.Checkin) error {
-	checkin, err := dao.GetCheckinServiceR().GetCheckinInfoByActivityIdAndWuid(resq.ActivityId, resp.Wuid)
-	if err != nil {
-		return err
+	checkin := dao.GetCheckinServiceR().GetCheckinInfoByActivityIdAndWuid(resq.ActivityId, resp.Wuid)
+	if checkin == nil {
+		return common.ErrDataEmpty
 	}
 	if checkin == nil {
 		checkin = &dao.CheckinModel{
 			ActivityId: resp.ActivityId,
 			Wuid:       resp.Wuid,
 		}
-		_, err = dao.GetCheckinServiceW().Insert(checkin)
+		_, err := dao.GetCheckinServiceW().Insert(checkin)
+		if err != nil {
+			config.LoggerWithField("resq", resq).
+				Error("CheckinService GetCheckinInfoByActivityIdAndWuid err:", err)
+			return err
+		}
 	}
 	CopyCheckinDaoToPb(checkin, resp)
-	return err
+	return nil
 }
 
-func (this *CheckinService) LimitByWid(ctx context.Context, resq *pb.RequestList, resp *pb.CheckinList) error {
-	wid, ok := resq.Params["wid"]
-	if !ok {
-		return nil
+func (this *CheckinService) ListByWid(ctx context.Context, resq *pb.RequestList, resp *pb.CheckinList) error {
+	var widInt64 int64
+	if wid, ok := resq.Params["wid"]; ok {
+		widInt64 = util.StringToInt64(wid)
 	}
-	widInt64 := util.StringToInt64(wid)
+	if widInt64 < 1 {
+		return common.ErrDataEmpty
+	}
 	checkins := dao.GetCheckinServiceR().ListByWid(widInt64)
+	if checkins == nil {
+		return common.ErrDataEmpty
+	}
 	for _, checkin := range checkins {
 		resp.Checkins = append(resp.Checkins, CopyCheckinDaoToPb(checkin, nil))
 	}
 	resp.Limit = resq.Limit
 	resp.Index = resq.Index
-	resp.Total = dao.GetCheckinServiceR().Count(&dao.CheckinModel{Wid: widInt64})
+	resp.Total = int64(len(checkins))
 	return nil
 }
 
@@ -71,15 +83,18 @@ func (this *CheckinService) Insert(ctx context.Context, resq *pb.Checkin, resp *
 		UpdatedAt:   time.Unix(resq.UpdatedAt, 0),
 	}
 	_, err := dao.GetCheckinServiceW().Insert(checkin)
-	if err == nil {
-		CopyCheckinDaoToPb(checkin, resp)
+	if err != nil {
+		config.LoggerWithField("resq", resq).
+			Error("CheckinService Insert err:", err)
+		return err
 	}
-	return err
+	CopyCheckinDaoToPb(checkin, resp)
+	return nil
 }
 
 func (this *CheckinService) Update(ctx context.Context, resq *pb.Checkin, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
-		return nil
+		return common.ErrDataUpdate
 	}
 	rows, err := dao.GetCheckinServiceW().Update(&dao.CheckinModel{
 		Id:          resq.Id,
@@ -89,21 +104,26 @@ func (this *CheckinService) Update(ctx context.Context, resq *pb.Checkin, resp *
 		Lastcheckin: time.Unix(resq.Lastcheckin, 0),
 		CreatedAt:   time.Unix(resq.CreatedAt, 0),
 	})
-	if err == nil {
-		resp.Success = true
-		resp.Effect = rows
+	if err != nil {
+		config.LoggerWithField("resq", resq).
+			Error("CheckinService Update err:", err)
+		return err
 	}
+	resp.Success = true
+	resp.Effect = rows
 	return nil
 }
 
 func (this *CheckinService) Delete(ctx context.Context, resq *pb.RequestById, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
-		return nil
+		return common.ErrDataDelete
 	}
 	ok := dao.GetCheckinServiceW().DeleteById(resq.Id)
-	if ok {
-		resp.Success = true
-		resp.Effect = 1
+	if !ok {
+		config.Logger().Error("CheckinService Delete [%v] err", resq)
+		return common.ErrDataDelete
 	}
+	resp.Success = true
+	resp.Effect = 1
 	return nil
 }

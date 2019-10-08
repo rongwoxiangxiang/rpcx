@@ -1,14 +1,13 @@
 package dao
 
 import (
-	"rpc/common"
 	"rpc/config"
 	"time"
 )
 
 type CheckinInterfaceR interface {
 	ListByWid(wid int64) []*CheckinModel
-	GetCheckinInfoByActivityIdAndWuid(activityId, wuid int64) (*CheckinModel, error)
+	GetCheckinInfoByActivityIdAndWuid(activityId, wuid int64) *CheckinModel
 	Count(*CheckinModel) int64
 }
 
@@ -35,9 +34,6 @@ func (this *CheckinModel) TableName() string {
 }
 
 func (this *CheckinModel) ListByWid(wid int64) (lotteries []*CheckinModel) {
-	if wid == 0 {
-		return nil
-	}
 	err := config.GetDbR(APP_DB_READ).Where("wid = ?", wid).Find(&lotteries)
 	if err != nil {
 		return nil
@@ -52,18 +48,18 @@ func (this *CheckinModel) ListByWid(wid int64) (lotteries []*CheckinModel) {
  * @Param id Wuid
  * @return CheckinModel,error
  */
-func (this *CheckinModel) GetCheckinInfoByActivityIdAndWuid(activityId, wuid int64) (*CheckinModel, error) {
+func (this *CheckinModel) GetCheckinInfoByActivityIdAndWuid(activityId, wuid int64) *CheckinModel {
 	if activityId == 0 || wuid == 0 {
-		return nil, common.ErrDataGet
+		return nil
 	}
 	checkin := new(CheckinModel)
 	checkin.ActivityId = activityId
 	checkin.Wuid = wuid
 	has, err := config.GetDbR(APP_DB_READ).Get(checkin)
 	if !has || err != nil {
-		return nil, err
+		return nil
 	}
-	return checkin, nil
+	return checkin
 }
 
 func (this *CheckinModel) Count(checkin *CheckinModel) int64 {

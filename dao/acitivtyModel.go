@@ -36,22 +36,16 @@ func (this *ActivityModel) TableName() string {
 }
 
 func (this *ActivityModel) GetById(id int64) *ActivityModel {
-	if id > 0 {
-		activity := new(ActivityModel)
-		activity.Id = id
-		has, err := config.GetDbR(APP_DB_READ).Get(activity)
-		if has != true || err != nil {
-			return nil
-		}
-		return activity
+	activity := new(ActivityModel)
+	activity.Id = id
+	has, err := config.GetDbR(APP_DB_READ).Get(activity)
+	if has != true || err != nil {
+		return nil
 	}
-	return nil
+	return activity
 }
 
 func (this *ActivityModel) ListByWid(wid int64, index, limit int) (activities []*ActivityModel) {
-	if index < 0 || wid < 1 || limit < 1 {
-		return nil
-	}
 	err := config.GetDbR(APP_DB_READ).Where("wid = ?", wid).Limit(limit, (index-1)*limit).Find(&activities)
 	if err != nil {
 		return nil
@@ -81,6 +75,7 @@ func (this *ActivityModel) DeleteById(id int64) bool {
 	}
 	_, err := config.GetDbW(APP_DB_WRITE).Id(id).Unscoped().Delete(&ActivityModel{})
 	if err != nil {
+		config.Logger().Error("ActivityModel DeleteById err: ", err)
 		return false
 	}
 	return true

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"rpc/common"
+	"rpc/config"
 	"rpc/dao"
 	"rpc/pb"
 	"rpc/util"
@@ -39,11 +41,20 @@ func (this *ActivityService) GetById(ctx context.Context, resq *pb.RequestById, 
 }
 
 func (this *ActivityService) LimitByWid(ctx context.Context, resq *pb.RequestList, resp *pb.ActivityList) error {
-	wid, ok := resq.Params["wid"]
-	if !ok {
-		return nil
+	var widInt64 int64
+	if wid, ok := resq.Params["wid"]; ok {
+		widInt64 = util.StringToInt64(wid)
 	}
-	widInt64 := util.StringToInt64(wid)
+	if resq.Index < 0 || resq.Limit < 1 || widInt64 < 1 {
+		return common.ErrDataEmpty
+	}
+	total := dao.GetActivityServiceR().Count(&dao.ActivityModel{Wid: widInt64})
+	if total < 0 {
+		return common.ErrDataEmpty
+	}
+	resp.Total = total
+	resp.Limit = resq.Limit
+	resp.Index = resq.Index
 	activities := dao.GetActivityServiceR().ListByWid(
 		widInt64,
 		*(*int)(unsafe.Pointer(&resq.Index)),
@@ -51,9 +62,6 @@ func (this *ActivityService) LimitByWid(ctx context.Context, resq *pb.RequestLis
 	for _, activity := range activities {
 		resp.Activities = append(resp.Activities, CopyActivityDaoToPb(activity, nil))
 	}
-	resp.Limit = resq.Limit
-	resp.Index = resq.Index
-	resp.Total = dao.GetActivityServiceR().Count(&dao.ActivityModel{Wid: widInt64})
 	return nil
 }
 
@@ -75,7 +83,8 @@ func (this *ActivityService) Insert(ctx context.Context, resq *pb.Activity, resp
 
 func (this *ActivityService) Update(ctx context.Context, resq *pb.Activity, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
-		return nil
+		config.Logger().Errorf("ActivityService update fail[1]:", resq)
+		return common.ErrDataUpdate
 	}
 	rows, err := dao.GetActivityServiceW().Update(&dao.ActivityModel{
 		Id:           resq.Id,
@@ -86,16 +95,20 @@ func (this *ActivityService) Update(ctx context.Context, resq *pb.Activity, resp
 		TimeStarted:  time.Unix(resq.TimeStarted, 0),
 		TimeEnd:      time.Unix(resq.TimeEnd, 0),
 	})
-	if err == nil {
-		resp.Success = true
-		resp.Effect = rows
+	if err != nil {
+		config.LoggerWithField("resq", "resq").
+			Errorf("ActivityService update fail[2] ,err:[%v]", err)
+		return common.ErrDataUpdate
 	}
-	return err
+	resp.Success = true
+	resp.Effect = rows
+	return nil
 }
 
 func (this *ActivityService) Delete(ctx context.Context, resq *pb.RequestById, resp *pb.ResponseEffect) error {
 	if resq.Id < 0 {
-		return nil
+		config.Logger().Errorf("ActivityService update fail[1]:", resq)
+		return common.ErrDataDelete
 	}
 	ok := dao.GetActivityServiceW().DeleteById(resq.Id)
 	if ok {

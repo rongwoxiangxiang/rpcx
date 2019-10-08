@@ -28,22 +28,17 @@ var (
 )
 
 var (
-	ErrUserEmpty = Err{Code: 100100, Msg: "用户不存在。"}
-	ErrPwdEmpty  = Err{Code: 100100, Msg: "密码不能为空。"}
-	ErrUserOrPwd = Err{Code: 100100, Msg: "帐号或密码错误。"}
-)
-
-var (
-	ErrUserExist       = Err{Code: 100100, Msg: "用户已存在,请修改后重试。"}
-	ErrUserLogin       = Err{Code: 100101, Msg: "用户名或密码错误,请检查后重试。"}
 	ErrDataUnExist     = Err{Code: 100200, Msg: "数据信息不存在,请检查后重试。"}
 	ErrDataCreate      = Err{Code: 100201, Msg: "数据信息插入失败,请检查后重试。"}
 	ErrDataUpdate      = Err{Code: 100202, Msg: "数据信息更新失败,请检查后重试。"}
 	ErrDataGet         = Err{Code: 100203, Msg: "数据信息获取失败,请检查后重试。"}
 	ErrDataFind        = Err{Code: 100204, Msg: "数据信息获取失败,请检查后重试。"}
 	ErrDataEmpty       = Err{Code: 100205, Msg: "数据信息不存在,请检查后重试。"}
-	ErrDataEmptyParams = Err{Code: 100206, Msg: "缺少必要参数,请检查后重试。"}
-	ErrDataNoExist     = Err{Code: 10030, Msg: "数据信息不存在存在,请检查后重试。"}
-	ErrLuckFinal       = Err{Code: 10040, Msg: "奖品已发放完毕。"}
-	ErrLuckFail        = Err{Code: 10050, Msg: "活动太火爆了，请稍后重试。"}
+	ErrDataDelete      = Err{Code: 100206, Msg: "数据信息删除失败,请检查后重试。"}
+	ErrDataEmptyParams = Err{Code: 100299, Msg: "缺少必要参数,请检查后重试。"}
+
+	ErrDataNoExist = Err{Code: 100300, Msg: "数据信息不存在存在,请检查后重试。"}
+
+	ErrLuckFinal = Err{Code: 100400, Msg: "奖品已发放完毕。"}
+	ErrLuckFail  = Err{Code: 100500, Msg: "活动太火爆了，请稍后重试。"}
 )

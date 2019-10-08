@@ -53,23 +53,12 @@ func Int8ToBoolen(i int8) bool {
 	}
 }
 
-func HmacSHA1Base64Encrypt(encryptText, seed string) string {
-	mac := hmac.New(sha1.New, []byte(seed))
-	mac.Write([]byte(encryptText))
-	bytes := mac.Sum(nil)
-	return base64.StdEncoding.EncodeToString(bytes)
-}
-
 func StringJoin(strings ...string) string {
 	var buffer Buffer
 	for _, str := range strings {
 		buffer.WriteString(str)
 	}
 	return buffer.String()
-}
-
-func Get6RandomNumber() string {
-	return strconv.FormatInt(rand.Int63n(899999)+100000, 10)
 }
 
 func Contain(obj interface{}, target interface{}) (bool, error) {
@@ -94,4 +83,15 @@ func GetFromMap(mp map[string]interface{}, key string) interface{} {
 		return val
 	}
 	return nil
+}
+
+func Get6RandomNumber() string {
+	return strconv.FormatInt(rand.Int63n(899999)+100000, 10)
+}
+
+func HmacSHA1Base64Encrypt(encryptText, seed string) string {
+	mac := hmac.New(sha1.New, []byte(seed))
+	mac.Write([]byte(encryptText))
+	bytes := mac.Sum(nil)
+	return base64.StdEncoding.EncodeToString(bytes)
 }

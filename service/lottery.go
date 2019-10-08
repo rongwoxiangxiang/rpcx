@@ -32,6 +32,9 @@ func CopyLotteryDaoToPb(lottery *dao.LotteryModel, pbLottery *pb.Lottery) *pb.Lo
 }
 
 func (this *LotteryService) ListByWidAndActivityId(ctx context.Context, resq *pb.RequestWidAndActivityId, resp *pb.LotteryList) error {
+	if resq.ActivityId < 1 || resq.Wid < 1 {
+		return nil
+	}
 	lotteries := dao.GetLotteryServiceR().ListByWidAndActivityId(resq.Wid, resq.ActivityId)
 	if lotteries == nil {
 		return nil

@@ -40,11 +40,12 @@ func (this *LotteryModel) Insert(model *LotteryModel) (int64, error) {
 }
 
 func (this *LotteryModel) DeleteById(id int64) bool {
-	if id == 0 {
+	if id < 1 {
 		return false
 	}
 	_, err := config.GetDbW(APP_DB_WRITE).Id(id).Unscoped().Delete(&LotteryModel{})
 	if err != nil {
+		config.Logger().WithField("id", id).Errorf("LotteryModel DeleteById err: %v", err)
 		return false
 	}
 	return true
@@ -64,10 +65,10 @@ func (this *LotteryModel) IncrClaimedNum(lottery *LotteryModel) error {
 }
 
 func (this *LotteryModel) ListByWidAndActivityId(wid, activityId int64) (lotteries []*LotteryModel) {
-	if activityId < 1 || wid < 1 {
-		return nil
-	}
-	err := config.GetDbR(APP_DB_READ).Where("wid = ? and activity_id = ?", wid, activityId).OrderBy("probability desc").Find(&lotteries)
+	err := config.GetDbR(APP_DB_READ).
+		Where("wid = ? and activity_id = ?", wid, activityId).
+		OrderBy("probability desc").
+		Find(&lotteries)
 	if err != nil {
 		lotteries = nil
 	}

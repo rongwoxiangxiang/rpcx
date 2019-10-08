@@ -142,28 +142,36 @@ func (this *PrizeService) BatchInsertPrize(ctx context.Context, resq *pb.PrizeAd
 }
 
 func (this *PrizeService) GetByActivityWuId(ctx context.Context, resq *pb.RequestOneByActivityWuid, resp *pb.PrizeHistory) error {
-	history, err := dao.GetPrizeHistoryServiceR().GetByActivityWuId(resq.ActivityId, resq.Wuid)
-	if err != nil {
-		return err
+	history := dao.GetPrizeHistoryServiceR().GetByActivityWuId(resq.ActivityId, resq.Wuid)
+	if history == nil {
+		return common.ErrDataEmpty
 	}
 	CopyPrizeHistoryDaoToPb(history, resp)
 	return nil
 }
 
 func (this *PrizeService) LimitByActivityList(ctx context.Context, resq *pb.RequestList, resp *pb.PrizeHistoryList) error {
-	activityId, ok := resq.Params["activityId"]
-	if !ok {
-		return nil
+	var activityIdInt64 int64
+	if activityId, ok := resq.Params["wid"]; ok {
+		activityIdInt64 = util.StringToInt64(activityId)
 	}
-	activityIdInt64 := util.StringToInt64(activityId)
+	if resq.Index < 0 || resq.Limit < 1 || activityIdInt64 < 1 {
+		return common.ErrDataEmpty
+	}
+	total := dao.GetPrizeHistoryServiceR().Count(&dao.PrizeHistoryModel{ActivityId: activityIdInt64})
+	if total < 0 {
+		return common.ErrDataEmpty
+	}
+	resp.Total = total
+	resp.Limit = resq.Limit
+	resp.Index = resq.Index
 	histories := dao.GetPrizeHistoryServiceR().LimitByActivityList(
-		activityIdInt64, *(*int)(unsafe.Pointer(&resq.Index)), *(*int)(unsafe.Pointer(&resq.Limit)))
+		activityIdInt64,
+		*(*int)(unsafe.Pointer(&resq.Index)),
+		*(*int)(unsafe.Pointer(&resq.Limit)))
 	for _, history := range histories {
 		resp.Histories = append(resp.Histories, CopyPrizeHistoryDaoToPb(history, nil))
 	}
-	resp.Total = dao.GetPrizeHistoryServiceR().Count(&dao.PrizeHistoryModel{ActivityId: activityIdInt64})
-	resp.Limit = resq.Limit
-	resp.Index = resq.Index
 	return nil
 }
 
@@ -177,10 +185,12 @@ func (this *PrizeService) InsertPrizeHistory(ctx context.Context, resq *pb.Prize
 		CreatedAt:  time.Unix(resq.CreatedAt, 0),
 	}
 	_, err := dao.GetPrizeHistoryServiceW().Insert(history)
-	if err == nil {
-		CopyPrizeHistoryDaoToPb(history, resp)
+	if err != nil {
+		config.Logger().Errorf("PrizeService InsertPrizeHistory: resq [%v], err: [%v]", resq, err)
+		return err
 	}
-	return err
+	CopyPrizeHistoryDaoToPb(history, resp)
+	return nil
 }
 
 func (this *PrizeService) DeletePrizeHistory(ctx context.Context, resq *pb.RequestById, resp *pb.ResponseEffect) error {

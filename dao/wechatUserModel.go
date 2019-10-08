@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"rpc/common"
 	"rpc/config"
 	"time"
 )
@@ -45,11 +44,9 @@ func (this *WechatUserModel) GetById(id int64) *WechatUserModel {
 	}
 	user := new(WechatUserModel)
 	user.Id = id
-	has, err := config.GetDbR(APP_DB_READ).Get(user)
-	if err != nil {
-		err = common.ErrDataGet
-	} else if has == false {
-		err = common.ErrDataEmpty
+	has, _ := config.GetDbR(APP_DB_READ).Get(user)
+	if has == false {
+		return nil
 	}
 	return user
 }
